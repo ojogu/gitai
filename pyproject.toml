@@ -1,0 +1,10 @@
+[project]
+name = "gitai"
+version = "0.1.0"
+description = "AI automatic commit message"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "unidiff>=0.7.5",
+    "litellm==1.82.6",
+]
