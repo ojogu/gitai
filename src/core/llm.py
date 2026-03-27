@@ -32,6 +32,7 @@ def get_llm_report(schema: dict, config: dict) -> dict:
     """
 
     model = os.getenv("LLM_MODEL")
+    api_key = os.getenv("AI_KEY")
 
     if not model:
         raise ValueError("LLM_MODEL not set in environment variables")
@@ -41,6 +42,7 @@ def get_llm_report(schema: dict, config: dict) -> dict:
 
     kwargs = {
         "model": model,
+        "api_key":api_key,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},

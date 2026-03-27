@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 
@@ -6,8 +7,9 @@ from core.extractor import extract_summary
 from core.schema_builder import build_schema
 from core.llm import get_llm_report
 from utils.config import load_config
+from utils.log import setup_logger
 
-
+logger = setup_logger(__name__, "test") 
 def get_staged_diff():
     return os.popen("git diff --cached").read()
 
@@ -34,7 +36,8 @@ def run():
     file_summaries = [extract_summary(f) for f in parsed_files]
 
     # 3. Build schema
-    schema = build_schema(file_summaries, parsed_files)
+    schema = build_schema( parsed_files)
+    logger.debug(json.dumps(schema, indent=2))
 
     # 4. LLM prediction
     result = get_llm_report(schema, config)
