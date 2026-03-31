@@ -8,3 +8,16 @@ dependencies = [
     "unidiff>=0.7.5",
     "litellm[google]==1.82.6",
 ]
+
+# 1. Define the command name and where the function is
+[project.scripts]
+gitai = "gitai.main:main"
+
+# 2. Tell the build system where your code lives
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# 3. Define the build backend
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

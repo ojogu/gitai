@@ -6,7 +6,7 @@
 
 from unidiff import PatchSet
 from typing import List, Dict, Any
-from core.extractor import extract_summary
+from gitai.core.extractor import extract_summary
 
 
 # ============================================================

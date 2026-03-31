@@ -1,0 +1,2 @@
+[2026-03-31 13:13:53] [DEBUG] utils.config - Loaded user config from 'config.json'
+[2026-03-31 13:13:53] [DEBUG] utils.config - Merged config: {'style': 'conventional', 'max_title_length': 72, 'include_body': True, 'custom_instructions': '', 'auto_commit': False}

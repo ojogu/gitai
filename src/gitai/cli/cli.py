@@ -2,12 +2,12 @@ import json
 import os
 import subprocess
 
-from core.parser import parse_git_diff
-from core.extractor import extract_summary
-from core.schema_builder import build_schema
-from core.llm import get_llm_report
-from utils.config import load_config
-from utils.log import setup_logger
+from gitai.core.parser import parse_git_diff
+from gitai.core.extractor import extract_summary
+from gitai.core.schema_builder import build_schema
+from gitai.core.llm import get_llm_report
+from gitai.utils.config import load_config
+from gitai.utils.log import setup_logger
 
 logger = setup_logger(__name__, "test") 
 def get_staged_diff():
@@ -18,7 +18,7 @@ def confirm(prompt="Proceed? (y/n): "):
     return input(prompt).lower().strip() == "y"
 
 
-def run():
+def main():
     print("🔍 Generating commit message...\n")
 
     config = load_config()
