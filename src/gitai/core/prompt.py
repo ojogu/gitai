@@ -82,45 +82,44 @@ def build_user_prompt(schema: dict, config: dict) -> str:
     if config.get("style") == "conventional":
         max_title = config.get("max_title_length", 72)
         base_prompt = f"""Generate a git commit message from the structured changes below.
-
-Rules:
-- Format: <type>(<scope>): <message>
-- Title must be under {max_title} characters
-- Validate the suggested type and scope from hints against the actual diff — correct them if wrong
-- Focus on WHAT changed and WHY, not implementation details
-- Keep it concise but meaningful
-"""
+        Rules:
+        - Format: <type>(<scope>): <message>
+        - Title must be under {max_title} characters
+        - Validate the suggested type and scope from hints against the actual diff — correct them if wrong
+        - Focus on WHAT changed and WHY, not implementation details
+        - Keep it concise but meaningful\n
+        """
 
         if config.get("include_body", True):
             base_prompt += """
-Optional body:
-- Include 1–3 bullet points if the change is non-trivial or affects multiple concerns
-- Each bullet should add information not already clear from the title
-"""
+            Optional body:
+            - Include 1–3 bullet points if the change is non-trivial or affects multiple concerns
+            - Each bullet should add information not already clear from the title\n
+            """
 
         base_prompt += """
-Special cases:
-- If you confirm a breaking change from the diff, add "!" after the type: e.g. feat!(...):
-- Do not mark breaking based on the hint alone — verify it
-- If multiple significant changes exist, prioritize the one with the highest impact
-"""
+        Special cases:
+        - If you confirm a breaking change from the diff, add "!" after the type: e.g. feat!(...):
+        - Do not mark breaking based on the hint alone — verify it
+        - If multiple significant changes exist, prioritize the one with the highest impact
+        """
 
     else:
         base_prompt = """Generate a concise and meaningful git commit message.
 
-Rules:
-- Do NOT use conventional commit prefixes (feat:, fix:, etc.)
-- Keep it short and clear
-- Focus on intent, not implementation details
-"""
+        Rules:
+        - Do NOT use conventional commit prefixes (feat:, fix:, etc.)
+        - Keep it short and clear
+        - Focus on intent, not implementation details
+        """
 
     addons = build_addons(schema)
     custom = config.get("custom_instructions", "")
 
     final_prompt = f"""{base_prompt}
-Structured changes:
-{schema_json}
-"""
+                Structured changes:
+                {schema_json}\n
+                """
 
     if addons:
         final_prompt += f"\n{addons}\n"

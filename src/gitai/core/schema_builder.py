@@ -152,7 +152,7 @@ def detect_breaking_change(changes: List[Dict]) -> bool:
 
 def build_schema(
     parsed_files: List[Dict],
-    # file_summaries: List[Dict],
+    file_summaries: List[Dict],
 ) -> Dict:
     """
     Build the structured schema for commit message generation.
@@ -194,7 +194,7 @@ def build_schema(
     total_deletions = sum(f.get("meta", {}).get("deletions", 0) for f in parsed_files)
 
     meta = {
-        # "files_changed": len(file_summaries),
+        "files_changed": len(file_summaries),
         "insertions": total_insertions,
         "deletions": total_deletions,
     }
@@ -203,30 +203,31 @@ def build_schema(
     # Raw diff is attached so the LLM has full context per file.
     # Summaries alone may miss internal logic changes, renames, or
     # subtle refactors that only the diff can reveal.
-    # changes = []
-    # for summary, parsed in zip(file_summaries, parsed_files):
-    #     entry = {**summary, "diff": parsed.get("raw_diff", "")}
-    #     changes.append(entry)
+    
+    changes = []
+    for summary, parsed in zip(file_summaries, parsed_files):
+        entry = {**summary, "diff": parsed.get("raw_diff", "")}
+        changes.append(entry)
 
     # ----- Hints -----
     # All hints are heuristic-derived weak signals.
     # suggested_type and confidence come from the same inference call
     # since confidence is a property of how the type was matched.
-    # suggested_type, confidence = infer_commit_type(file_summaries)
+    suggested_type, confidence = infer_commit_type(file_summaries)
 
     hints = {
         # Weak signal — keyword matched. LLM should validate against diff.
-        # "suggested_type": suggested_type,
+        "suggested_type": suggested_type,
 
         # # Generally reliable — maps directly to directory structure.
-        # "suggested_scope": infer_scope(file_summaries),
+        "suggested_scope": infer_scope(file_summaries),
 
         # # Heuristic flag only. LLM must confirm from diff before using.
-        # "breaking_change_signal": detect_breaking_change(file_summaries),
+        "breaking_change_signal": detect_breaking_change(file_summaries),
 
         # # Reflects how reliable suggested_type is.
         # # "low" means the LLM should ignore suggested_type and infer from diff.
-        # "confidence": confidence,
+        "confidence": confidence,
     }
 
     return {

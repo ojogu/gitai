@@ -1,4 +1,3 @@
-
 import os
 import json
 from gitai.utils.log import setup_logger
@@ -14,7 +13,19 @@ DEFAULT_CONFIG = {
 }
 
 
+def _get_project_root() -> str:
+    """Find the project root by looking for pyproject.toml."""
+    current = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    return current
+
+
 def load_config(path="config.json"):
+    # If path is absolute or doesn't exist, try relative to project root
+    if not os.path.isabs(path) and not os.path.exists(path):
+        root_config = os.path.join(_get_project_root(), path)
+        if os.path.exists(root_config):
+            path = root_config
+
     if not os.path.exists(path):
         logger.debug(f"Config file '{path}' not found, using default values")
         return DEFAULT_CONFIG
@@ -31,3 +42,4 @@ def load_config(path="config.json"):
     config = {**DEFAULT_CONFIG, **user_config}
     logger.debug(f"Merged config: {config}")
     return config
+
