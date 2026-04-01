@@ -9,7 +9,7 @@ from gitai.core.llm import get_llm_report
 from gitai.utils.config import load_config
 from gitai.utils.log import setup_logger
 
-logger = setup_logger(__name__, "test") 
+logger = setup_logger(__name__, "test.log") 
 def get_staged_diff():
     return os.popen("git diff --cached").read()
 
