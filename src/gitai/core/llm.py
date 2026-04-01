@@ -13,8 +13,10 @@ load_dotenv()
 SYSTEM_PROMPT = build_system_prompt()
 
 
-
-
+def _extract_json(text: str) -> dict:
+    """Extract JSON from LLM response, stripping markdown fences if present."""
+    text = re.sub(r"```(?:json)?", "", text).strip().strip("`").strip()
+    return json.loads(text)
 
 def get_llm_report(schema: dict, config: dict) -> dict:
     """

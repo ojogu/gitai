@@ -1147,3 +1147,234 @@
   ],
   "hints": {}
 }
+[2026-03-31 14:40:59] [DEBUG] gitai.cli.cli - {
+  "meta": {
+    "files_changed": 7,
+    "insertions": 0,
+    "deletions": 0
+  },
+  "changes": [
+    {
+      "file": "src/gitai/cli/cli.py",
+      "type": "modified",
+      "scope": "cli",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/llm.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic",
+        "remove _extract_json function"
+      ]
+    },
+    {
+      "file": "src/gitai/core/prompt.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/schema_builder.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/utils/config.py",
+      "type": "modified",
+      "scope": "utils",
+      "summary": [
+        "add _get_project_root function",
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/logs/app.log",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    },
+    {
+      "file": "src/logs/test",
+      "type": "added",
+      "scope": "logs",
+      "summary": [
+        "add build_addons function",
+        "add build_user_prompt function",
+        "add run function",
+        "add load_config function",
+        "add main function"
+      ]
+    }
+  ],
+  "hints": {
+    "suggested_type": "chore",
+    "suggested_scope": "general",
+    "breaking_change_signal": false,
+    "confidence": "low"
+  }
+}
+[2026-03-31 14:41:50] [DEBUG] gitai.cli.cli - {
+  "meta": {
+    "files_changed": 7,
+    "insertions": 0,
+    "deletions": 0
+  },
+  "changes": [
+    {
+      "file": "src/gitai/cli/cli.py",
+      "type": "modified",
+      "scope": "cli",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/llm.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "remove _extract_json function",
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/prompt.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/schema_builder.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/utils/config.py",
+      "type": "modified",
+      "scope": "utils",
+      "summary": [
+        "update existing logic",
+        "add _get_project_root function"
+      ]
+    },
+    {
+      "file": "src/logs/app.log",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    },
+    {
+      "file": "src/logs/test",
+      "type": "added",
+      "scope": "logs",
+      "summary": [
+        "add run function",
+        "add build_addons function",
+        "add load_config function",
+        "add build_user_prompt function",
+        "add test file"
+      ]
+    }
+  ],
+  "hints": {
+    "suggested_type": "chore",
+    "suggested_scope": "general",
+    "breaking_change_signal": false,
+    "confidence": "low"
+  }
+}
+[2026-04-01 10:03:00] [DEBUG] gitai.cli.cli - {
+  "meta": {
+    "files_changed": 7,
+    "insertions": 0,
+    "deletions": 0
+  },
+  "changes": [
+    {
+      "file": "src/gitai/cli/cli.py",
+      "type": "modified",
+      "scope": "cli",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/llm.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic",
+        "remove _extract_json function"
+      ]
+    },
+    {
+      "file": "src/gitai/core/prompt.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/schema_builder.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/utils/config.py",
+      "type": "modified",
+      "scope": "utils",
+      "summary": [
+        "update existing logic",
+        "add _get_project_root function"
+      ]
+    },
+    {
+      "file": "src/logs/app.log",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    },
+    {
+      "file": "src/logs/test",
+      "type": "added",
+      "scope": "logs",
+      "summary": [
+        "add infer_commit_type function",
+        "add main function",
+        "add load_config function",
+        "add run function",
+        "add test file"
+      ]
+    }
+  ],
+  "hints": {
+    "suggested_type": "chore",
+    "suggested_scope": "general",
+    "breaking_change_signal": false,
+    "confidence": "low"
+  }
+}

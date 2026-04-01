@@ -3,5 +3,6 @@
   "max_title_length": 72,
   "include_body": true,
   "custom_instructions": "",
-  "auto_commit": false
+  "auto_commit": false,
+  "retry":3
 }

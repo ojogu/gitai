@@ -58,8 +58,24 @@ def main():
         print("✅ Commit created.")
         return
 
-    if confirm("👉 Use this commit message? (y/n): "):
-        subprocess.run(["git", "commit", "-m", message])
-        print("✅ Commit created.")
-    else:
-        print("❌ Commit cancelled.")
+    max_retries = config.get("retry", 3)
+    for attempt in range(max_retries):
+        if attempt > 0:
+            print(f"\n🔄 Retry {attempt}/{max_retries - 1}")
+            result = get_llm_report(schema, config)
+            message = result.get("message", "").strip()
+            if not message:
+                print("❌ Failed to generate commit message.")
+                return
+            print("✨ Suggested Commit Message:\n")
+            print(message)
+            print("\n" + "-" * 50)
+
+        if confirm("👉 Use this commit message? (y/n): "):
+            subprocess.run(["git", "commit", "-m", message])
+            print("✅ Commit created.")
+            return
+        else:
+            print("⚠️ Commit message declined.")
+
+    print("❌ Maximum retries reached. Commit cancelled.")
