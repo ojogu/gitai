@@ -9,3 +9,8 @@
 [2026-03-31 14:41:50] [DEBUG] gitai.utils.config - Merged config: {'style': 'conventional', 'max_title_length': 72, 'include_body': True, 'custom_instructions': '', 'auto_commit': False}
 [2026-04-01 10:03:00] [DEBUG] gitai.utils.config - Loaded user config from 'config.json'
 [2026-04-01 10:03:00] [DEBUG] gitai.utils.config - Merged config: {'style': 'conventional', 'max_title_length': 72, 'include_body': True, 'custom_instructions': '', 'auto_commit': False, 'retry': 3}
+[2026-04-01 10:08:30] [DEBUG] gitai.utils.config - Loaded user config from 'config.json'
+[2026-04-01 10:08:30] [DEBUG] gitai.utils.config - Merged config: {'style': 'conventional', 'max_title_length': 72, 'include_body': True, 'custom_instructions': '', 'auto_commit': False, 'retry': 3}
+[2026-04-01 10:39:34] [DEBUG] gitai.utils.config - Config file 'config.json' not found, using default values
+[2026-04-01 10:47:44] [DEBUG] gitai.utils.config - Loaded user config from 'config.json'
+[2026-04-01 10:47:44] [DEBUG] gitai.utils.config - Merged config: {'style': 'conventional', 'max_title_length': 72, 'include_body': True, 'custom_instructions': '', 'auto_commit': False, 'retry': 3}

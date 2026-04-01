@@ -1378,3 +1378,213 @@
     "confidence": "low"
   }
 }
+[2026-04-01 10:08:30] [DEBUG] gitai.cli.cli - {
+  "meta": {
+    "files_changed": 5,
+    "insertions": 0,
+    "deletions": 0
+  },
+  "changes": [
+    {
+      "file": "config.json",
+      "type": "modified",
+      "scope": "general",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/cli/cli.py",
+      "type": "modified",
+      "scope": "cli",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/gitai/core/llm.py",
+      "type": "modified",
+      "scope": "core",
+      "summary": [
+        "add _extract_json function",
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "src/logs/app.log",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    },
+    {
+      "file": "src/logs/test",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    }
+  ],
+  "hints": {
+    "suggested_type": "chore",
+    "suggested_scope": "general",
+    "breaking_change_signal": false,
+    "confidence": "low"
+  }
+}
+[2026-04-01 10:39:34] [DEBUG] gitai.cli.cli - {
+  "meta": {
+    "files_changed": 15,
+    "insertions": 0,
+    "deletions": 0
+  },
+  "changes": [
+    {
+      "file": "backend/logs/app.log",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    },
+    {
+      "file": "backend/src/v1/auth/routes.py",
+      "type": "modified",
+      "scope": "auth",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "backend/src/v1/schemas/user.py",
+      "type": "modified",
+      "scope": "schemas",
+      "summary": [
+        "update existing logic",
+        "add UserInfoFromX class"
+      ]
+    },
+    {
+      "file": "backend/src/v1/service/twitter.py",
+      "type": "modified",
+      "scope": "service",
+      "summary": [
+        "update existing logic",
+        "add dependencies"
+      ]
+    },
+    {
+      "file": "docker-compose.yml",
+      "type": "modified",
+      "scope": "general",
+      "summary": [
+        "update existing logic"
+      ]
+    },
+    {
+      "file": "frontend/src/api/client.ts",
+      "type": "added",
+      "scope": "api",
+      "summary": [
+        "add client.ts file",
+        "add processQueue function",
+        "add dependencies"
+      ]
+    },
+    {
+      "file": "frontend/src/hooks/useAuth.ts",
+      "type": "added",
+      "scope": "hooks",
+      "summary": [
+        "add loginWithX function",
+        "add dependencies",
+        "add logout function",
+        "add isAuthenticated function",
+        "add useAuth.ts file"
+      ]
+    },
+    {
+      "file": "frontend/src/pages/AuthPage.tsx",
+      "type": "modified",
+      "scope": "pages",
+      "summary": [
+        "add handleConnect function",
+        "update existing logic",
+        "remove handleConnect function",
+        "add dependencies"
+      ]
+    },
+    {
+      "file": "frontend/src/pages/CallbackPage.tsx",
+      "type": "added",
+      "scope": "pages",
+      "summary": [
+        "add interval function",
+        "add dependencies",
+        "add CallbackPage function",
+        "add CallbackPage.tsx file",
+        "add onClick function"
+      ]
+    },
+    {
+      "file": "frontend/src/pages/DashboardPage.tsx",
+      "type": "added",
+      "scope": "pages",
+      "summary": [
+        "add DashboardPage.tsx file",
+        "add DashboardPage function",
+        "add dependencies"
+      ]
+    },
+    {
+      "file": "frontend/src/router/ProtectedRoute.tsx",
+      "type": "added",
+      "scope": "router",
+      "summary": [
+        "add ProtectedRoute.tsx file",
+        "add ProtectedRoute function",
+        "add dependencies"
+      ]
+    },
+    {
+      "file": "frontend/src/router/index.tsx",
+      "type": "modified",
+      "scope": "router",
+      "summary": [
+        "add dependencies"
+      ]
+    },
+    {
+      "file": "frontend/src/store/auth.ts",
+      "type": "added",
+      "scope": "store",
+      "summary": [
+        "add auth.ts file"
+      ]
+    },
+    {
+      "file": "frontend/src/vite-env.d.ts",
+      "type": "added",
+      "scope": "src",
+      "summary": [
+        "add vite-env.d.ts file"
+      ]
+    },
+    {
+      "file": "frontend/tsconfig.tsbuildinfo",
+      "type": "modified",
+      "scope": "frontend",
+      "summary": [
+        "update existing logic"
+      ]
+    }
+  ],
+  "hints": {
+    "suggested_type": "chore",
+    "suggested_scope": "general",
+    "breaking_change_signal": false,
+    "confidence": "low"
+  }
+}
