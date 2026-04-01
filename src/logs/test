@@ -1588,3 +1588,58 @@
     "confidence": "low"
   }
 }
+[2026-04-01 10:48:00] [DEBUG] gitai.cli.cli - {
+  "meta": {
+    "files_changed": 5,
+    "insertions": 0,
+    "deletions": 0
+  },
+  "changes": [
+    {
+      "file": ".env.example",
+      "type": "added",
+      "scope": "general",
+      "summary": [
+        "add .env.example file"
+      ]
+    },
+    {
+      "file": ".gitignore",
+      "type": "modified",
+      "scope": "general",
+      "summary": [
+        "update file"
+      ]
+    },
+    {
+      "file": "config.json.example",
+      "type": "added",
+      "scope": "general",
+      "summary": [
+        "add config.json.example file"
+      ]
+    },
+    {
+      "file": "src/logs/app.log",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    },
+    {
+      "file": "src/logs/test",
+      "type": "modified",
+      "scope": "logs",
+      "summary": [
+        "update file"
+      ]
+    }
+  ],
+  "hints": {
+    "suggested_type": "chore",
+    "suggested_scope": "general",
+    "breaking_change_signal": false,
+    "confidence": "low"
+  }
+}

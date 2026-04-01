@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from .prompt import build_system_prompt, build_user_prompt
 
 # Enable verbose logging (optional)
-litellm.set_verbose = True
+# litellm.set_verbose = True
 
 load_dotenv()
 
