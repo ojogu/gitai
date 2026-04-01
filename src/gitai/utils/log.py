@@ -4,8 +4,8 @@ import os
 from rich.logging import RichHandler  # Rich handler for colored console output
 
 # Determine the root directory of the project.
-# This script is in: src/utils/log.py
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# This script is in: src/gitai/utils/log.py
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 
 
