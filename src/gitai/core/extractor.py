@@ -6,10 +6,18 @@
 # 
 # The extractor uses regex patterns to detect code patterns across
 # multiple programming languages in a language-agnostic way.
+# 
+# Returns structured Signal Objects instead of plain strings:
+# {
+#     "type": "function_addition" | "function_removal" | "class_addition" | ...
+#     "entity": "function_name" | "class_name" | None,
+#     "impact": "low" | "medium" | "high",
+#     "language": "python" | "javascript" | "go" | "other"
+# }
 
 import os
 import re
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 
 # ============================================================
@@ -47,6 +55,53 @@ TEST_PATTERNS = [
     r"test_",                  # test_*.py, test*.py
     r"\.test\.",               # component.test.js
     r"\.spec\.",               # component.spec.ts
+]
+
+# Language detection from file extension
+LANGUAGE_MAP = {
+    ".py": "python",
+    ".js": "javascript",
+    ".ts": "typescript",
+    ".jsx": "javascript",
+    ".tsx": "typescript",
+    ".go": "go",
+    ".rb": "ruby",
+    ".java": "java",
+    ".c": "c",
+    ".cpp": "cpp",
+    ".h": "c",
+    ".rs": "rust",
+    ".php": "php",
+    ".cs": "csharp",
+    ".swift": "swift",
+    ".kt": "kotlin",
+}
+
+# Python-specific patterns for async, decorator, import changes
+PYTHON_ASYNC_PATTERNS = [
+    r"async\s+def\s+(\w+)",           # async def function_name
+    r"async\s+with\s+",               # async with statement
+    r"async\s+for\s+",                # async for statement
+    r"await\s+",                      # await expression
+]
+
+PYTHON_DECORATOR_PATTERNS = [
+    r"@\w+",                          # @decorator
+]
+
+PYTHON_IMPORT_PATTERNS = [
+    r"^import\s+(\w+)",               # import module
+    r"^from\s+([\w.]+)\s+import",     # from module import ...
+]
+
+# Export/API patterns for breaking change detection
+EXPORT_PATTERNS = [
+    r"export\s+",                     # JS/TS: export const/function/class
+    r"module\.exports",               # Node.js: module.exports
+    r"exports\.",                     # Node.js: exports.something
+    r"public\s+",                     # Java/C#: public modifier
+    r"def\s+\w+",                     # Python: function definitions (potential API)
+    r"class\s+\w+",                   # Python: class definitions (potential API)
 ]
 
 
@@ -111,6 +166,117 @@ def is_test_file(file_path: str) -> bool:
     return any(re.search(p, file_path) for p in TEST_PATTERNS)
 
 
+def detect_language(file_path: str) -> str:
+    """
+    Detect programming language from file extension.
+    
+    Args:
+        file_path: Path to the source file
+        
+    Returns:
+        Language identifier (e.g., "python", "javascript", "go", "other")
+    """
+    _, ext = os.path.splitext(file_path)
+    return LANGUAGE_MAP.get(ext.lower(), "other")
+
+
+def detect_python_specific(lines: List[str], is_added: bool) -> List[Dict]:
+    """
+    Detect Python-specific changes: async, decorators, imports.
+    
+    Args:
+        lines: List of code lines to analyze
+        is_added: True if these are added lines, False if removed
+        
+    Returns:
+        List of signal objects for Python-specific changes
+    """
+    signals = []
+    signal_type_prefix = "add" if is_added else "remove"
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Check for async changes
+        for pattern in PYTHON_ASYNC_PATTERNS:
+            match = re.search(pattern, line)
+            if match:
+                entity = match.group(1) if match.groups() else "async_block"
+                signals.append({
+                    "type": f"{signal_type_prefix}_async",
+                    "entity": entity,
+                    "impact": "medium",
+                    "language": "python"
+                })
+                break  # One signal per line
+        
+        # Check for decorator changes
+        for pattern in PYTHON_DECORATOR_PATTERNS:
+            match = re.search(pattern, line)
+            if match:
+                decorator_name = match.group(0)[1:]  # Remove @ prefix
+                signals.append({
+                    "type": f"{signal_type_prefix}_decorator",
+                    "entity": decorator_name,
+                    "impact": "medium",
+                    "language": "python"
+                })
+                break
+        
+        # Check for import changes
+        for pattern in PYTHON_IMPORT_PATTERNS:
+            match = re.search(pattern, line)
+            if match:
+                module_name = match.group(1) if match.groups() else "module"
+                signals.append({
+                    "type": f"{signal_type_prefix}_dependency",
+                    "entity": module_name,
+                    "impact": "low",
+                    "language": "python"
+                })
+                break
+    
+    return signals
+
+
+def detect_export_changes(lines: List[str], is_added: bool, language: str) -> List[Dict]:
+    """
+    Detect changes to exported/public API surface.
+    
+    Args:
+        lines: List of code lines to analyze
+        is_added: True if these are added lines, False if removed
+        language: Programming language identifier
+        
+    Returns:
+        List of signal objects for export/API changes
+    """
+    signals = []
+    signal_type_prefix = "add" if is_added else "remove"
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Check for export patterns
+        for pattern in EXPORT_PATTERNS:
+            match = re.search(pattern, line)
+            if match:
+                # Extract entity name if possible
+                entity = None
+                if match.groups():
+                    entity = match.group(1)
+                
+                signals.append({
+                    "type": f"{signal_type_prefix}_export",
+                    "entity": entity,
+                    "impact": "high",  # Export changes are high impact
+                    "language": language
+                })
+                break
+    
+    return signals
+
+
 # ============================================================
 # MAIN EXTRACTOR FUNCTION
 # Core logic for generating semantic summaries from file changes
@@ -125,6 +291,10 @@ def extract_summary(file_change: Union[List[Dict], Dict]) -> Union[List[Dict], D
     - Dependency changes (imports/requires)
     - Test file modifications
     - File-level operations (add/delete)
+    - Python-specific changes (async, decorators)
+    - Export/API surface changes
+    
+    This function returns structured Signal Objects instead of plain strings.
     
     This function is flexible and handles both single dict and list of dicts:
         - Single: extract_summary(change) -> Dict
@@ -149,7 +319,9 @@ def extract_summary(file_change: Union[List[Dict], Dict]) -> Union[List[Dict], D
             - file: Original file path
             - type: Change type
             - scope: Inferred directory/module scope
-            - summary: List of human-readable change descriptions
+            - language: Detected programming language
+            - signals: List of structured Signal Objects
+            - summary: List of human-readable change descriptions (legacy)
     """
     # Handle list of file changes by processing each one
     if isinstance(file_change, list):
@@ -160,20 +332,43 @@ def extract_summary(file_change: Union[List[Dict], Dict]) -> Union[List[Dict], D
     removed = file_change.get("removed_lines", [])
     change_type = file_change["type"]
 
-    summaries = []
+    # Detect language from file extension
+    language = detect_language(file_path)
+    
+    # Initialize signals list (structured) and summary list (legacy strings)
+    signals: List[Dict] = []
+    summaries: List[str] = []
 
     # ----- File-level heuristics -----
     filename = os.path.basename(file_path)
 
     # Track complete file additions and deletions
     if change_type == "added":
+        signals.append({
+            "type": "file_addition",
+            "entity": filename,
+            "impact": "high",
+            "language": language
+        })
         summaries.append(f"add {filename} file")
 
     if change_type == "deleted":
+        signals.append({
+            "type": "file_deletion",
+            "entity": filename,
+            "impact": "high",
+            "language": language
+        })
         summaries.append(f"remove {filename} file")
 
     # Flag changes to test files
     if is_test_file(file_path):
+        signals.append({
+            "type": "test_update",
+            "entity": None,
+            "impact": "low",
+            "language": language
+        })
         summaries.append("add or update tests")
 
     # ----- Analyze added lines for new constructs -----
@@ -183,15 +378,33 @@ def extract_summary(file_change: Union[List[Dict], Dict]) -> Union[List[Dict], D
         # Detect new function definitions
         funcs = match_patterns(line, FUNCTION_PATTERNS)
         for f in funcs:
+            signals.append({
+                "type": "function_addition",
+                "entity": f,
+                "impact": "medium",
+                "language": language
+            })
             summaries.append(f"add {f} function")
 
         # Detect new class/type definitions
         classes = match_patterns(line, CLASS_PATTERNS)
         for c in classes:
+            signals.append({
+                "type": "class_addition",
+                "entity": c,
+                "impact": "medium",
+                "language": language
+            })
             summaries.append(f"add {c} class")
 
         # Detect new dependencies/imports
         if any(re.search(p, line) for p in IMPORT_PATTERNS):
+            signals.append({
+                "type": "dependency_addition",
+                "entity": None,
+                "impact": "low",
+                "language": language
+            })
             summaries.append("add dependencies")
 
     # ----- Analyze removed lines for deleted constructs -----
@@ -201,26 +414,60 @@ def extract_summary(file_change: Union[List[Dict], Dict]) -> Union[List[Dict], D
         # Detect removed function definitions
         funcs = match_patterns(line, FUNCTION_PATTERNS)
         for f in funcs:
+            signals.append({
+                "type": "function_removal",
+                "entity": f,
+                "impact": "medium",
+                "language": language
+            })
             summaries.append(f"remove {f} function")
 
         # Detect removed class definitions
         classes = match_patterns(line, CLASS_PATTERNS)
         for c in classes:
+            signals.append({
+                "type": "class_removal",
+                "entity": c,
+                "impact": "medium",
+                "language": language
+            })
             summaries.append(f"remove {c} class")
+
+    # ----- Language-specific analysis -----
+    # Python-specific: async, decorators, imports
+    if language == "python":
+        signals.extend(detect_python_specific(added, is_added=True))
+        signals.extend(detect_python_specific(removed, is_added=False))
+
+    # Export/API changes (all languages)
+    signals.extend(detect_export_changes(added, is_added=True, language=language))
+    signals.extend(detect_export_changes(removed, is_added=False, language=language))
 
     # ----- Heuristic: detect modifications -----
     # If we have both added and removed lines, it's likely a modification
     # rather than pure addition/deletion
     if added and removed:
+        signals.append({
+            "type": "logic_update",
+            "entity": None,
+            "impact": "low",
+            "language": language
+        })
         summaries.append("update existing logic")
 
     # ----- Fallback: generic update message -----
-    # Ensure we always return at least some summary
-    if not summaries:
+    # Ensure we always return at least some signal
+    if not signals:
+        signals.append({
+            "type": "file_update",
+            "entity": None,
+            "impact": "low",
+            "language": language
+        })
         summaries.append("update file")
 
     # ----- Post-processing -----
-    # Remove duplicates and limit to top 5 most important changes
+    # Remove duplicate summaries and limit to top 5 most important changes
     # to keep summaries concise and focused
     summaries = list(set(summaries))[:5]
 
@@ -228,5 +475,7 @@ def extract_summary(file_change: Union[List[Dict], Dict]) -> Union[List[Dict], D
         "file": file_path,
         "type": change_type,
         "scope": infer_scope(file_path),
-        "summary": summaries
+        "language": language,
+        "signals": signals,
+        "summary": summaries  # Legacy field for backward compatibility
     }

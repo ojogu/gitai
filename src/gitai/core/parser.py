@@ -7,8 +7,10 @@
 from unidiff import PatchSet
 from typing import List, Dict, Any
 from gitai.core.extractor import extract_summary
+from gitai.utils.log import setup_logger
 
 
+logger = setup_logger(__name__, "parse.log")
 # ============================================================
 # MAIN PARSER FUNCTION
 # Converts git diff text into structured dictionaries
@@ -74,17 +76,91 @@ def parse_git_diff(diff_text: str) -> List[Dict[str, Any]]:
             }
         }
 
-        # Extract line-by-line changes from each hunk
+        # Extract line-by-line changes and hunk context from each hunk
         # Hunks contain the actual code changes with +/- prefixes
+        file_change["hunks"] = []
+        raw_diff_lines = []
+        
         for hunk in patched_file:
+            # Build structured hunk data with context
+            hunk_data = {
+                "start_line": hunk.source_start,
+                "source_length": hunk.source_length,
+                "target_start": hunk.target_start,
+                "target_length": hunk.target_length,
+                "context_before": [],
+                "changes": [],
+                "context_after": []
+            }
+            
+            # Collect all lines from the hunk
+            hunk_lines = []
             for line in hunk:
-                # Only process added or removed lines (skip context lines)
-                if line.is_added:
-                    # Remove trailing newline before storing
-                    file_change["added_lines"].append(line.value.rstrip("\n"))
-                elif line.is_removed:
-                    file_change["removed_lines"].append(line.value.rstrip("\n"))
+                line_value = line.value.rstrip("\n")
+                hunk_lines.append({
+                    "type": "context" if not line.is_added and not line.is_removed else ("add" if line.is_added else "remove"),
+                    "value": line_value,
+                    "line_number": line.line_number if hasattr(line, 'line_number') else None,
+                    "is_added": line.is_added,
+                    "is_removed": line.is_removed,
+                })
+                raw_diff_lines.append(str(line))
+            
+            # Extract context before changes (up to 3 lines)
+            change_start_idx = None
+            for i, hunk_line in enumerate(hunk_lines):
+                if hunk_line["type"] in ("add", "remove"):
+                    change_start_idx = i
+                    break
+            
+            if change_start_idx is not None:
+                # Context before: up to 3 lines before first change
+                context_before_start = max(0, change_start_idx - 3)
+                hunk_data["context_before"] = [
+                    hunk_lines[j]["value"] for j in range(context_before_start, change_start_idx)
+                ]
+                
+                # Context after: up to 3 lines after last change
+                change_end_idx = None
+                for i in range(len(hunk_lines) - 1, -1, -1):
+                    if hunk_lines[i]["type"] in ("add", "remove"):
+                        change_end_idx = i
+                        break
+                
+                if change_end_idx is not None:
+                    context_after_end = min(len(hunk_lines), change_end_idx + 4)
+                    hunk_data["context_after"] = [
+                        hunk_lines[j]["value"] for j in range(change_end_idx + 1, context_after_end)
+                    ]
+                
+                # Extract changes with line numbers
+                for i, hunk_line in enumerate(hunk_lines):
+                    if hunk_line["type"] in ("add", "remove"):
+                        # For removed lines, use the line_number from unidiff
+                        # For added lines, estimate based on position
+                        if hunk_line["is_removed"]:
+                            line_num = hunk_line["line_number"]
+                        else:
+                            # For added lines, estimate from context
+                            line_num = hunk_data["start_line"] + change_start_idx - len(hunk_data["context_before"]) + i
+                        hunk_data["changes"].append({
+                            "type": hunk_line["type"],
+                            "line": hunk_line["value"],
+                            "line_num": line_num
+                        })
+            
+            file_change["hunks"].append(hunk_data)
+            
+            # Process added/removed lines for backward compatibility
+            for hunk_line in hunk_lines:
+                if hunk_line["is_added"]:
+                    file_change["added_lines"].append(hunk_line["value"])
+                elif hunk_line["is_removed"]:
+                    file_change["removed_lines"].append(hunk_line["value"])
+        
+        # Store raw diff for this file
+        file_change["raw_diff"] = "\n".join(raw_diff_lines)
 
         files.append(file_change)
-
+    logger.info(f"file changes:{files}")
     return files
