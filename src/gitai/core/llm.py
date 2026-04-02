@@ -123,7 +123,7 @@ def get_llm_report(schema: dict, config: dict) -> dict:
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.2,  # Low temperature for more deterministic output
-        "max_tokens": 500,   # Limit response length for commit messages
+        "max_tokens": 1024,  # Allow enough tokens for full commit messages with body
     }
 
     # Execute the LLM API call with error handling
