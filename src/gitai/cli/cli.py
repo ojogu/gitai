@@ -59,14 +59,20 @@ def main():
         return
 
     max_retries = config.get("retry", 3)
+    commit_messages = []
+
     for attempt in range(max_retries):
-        if attempt > 0:
+        if attempt == 0:
+            # First attempt - message already generated above
+            commit_messages.append(message)
+        else:
             print(f"\n🔄 Retry {attempt}/{max_retries - 1}")
             result = get_llm_report(schema, config)
             message = result.get("message", "").strip()
             if not message:
                 print("❌ Failed to generate commit message.")
-                return
+                continue
+            commit_messages.append(message)
             print("✨ Suggested Commit Message:\n")
             print(message)
             print("\n" + "-" * 50)
@@ -75,7 +81,29 @@ def main():
             subprocess.run(["git", "commit", "-m", message])
             print("✅ Commit created.")
             return
-        else:
-            print("⚠️ Commit message declined.")
 
-    print("❌ Maximum retries reached. Commit cancelled.")
+    # If we have multiple messages, let user choose
+    if len(commit_messages) > 1:
+        print("\n📋 Available commit messages from all attempts:")
+        for i, msg in enumerate(commit_messages, 1):
+            print(f"\n{i}. {msg}")
+        print(f"\n0. Exit without committing")
+
+        while True:
+            try:
+                choice = input("\n👉 Choose a commit message (0-{0}): ".format(len(commit_messages))).strip()
+                if choice == "0":
+                    print("❌ Commit cancelled.")
+                    return
+                choice_num = int(choice)
+                if 1 <= choice_num <= len(commit_messages):
+                    selected_message = commit_messages[choice_num - 1]
+                    subprocess.run(["git", "commit", "-m", selected_message])
+                    print("✅ Commit created.")
+                    return
+                else:
+                    print(f"⚠️ Please enter a number between 0 and {len(commit_messages)}")
+            except ValueError:
+                print("⚠️ Please enter a valid number")
+    else:
+        print("❌ Maximum retries reached. Commit cancelled.")
