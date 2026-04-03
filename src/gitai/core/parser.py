@@ -7,8 +7,8 @@
 from unidiff import PatchSet
 from typing import List, Dict, Any
 from gitai.core.extractor import extract_summary
-from gitai.utils.log import setup_logger
-
+from gitai.utils.log import setup_logger, sanitize_for_logging
+from gitai.utils.exceptions import ParseError
 
 logger = setup_logger(__name__, "parse.log")
 # ============================================================
@@ -43,14 +43,32 @@ def parse_git_diff(diff_text: str) -> List[Dict[str, Any]]:
                 - insertions (int): Total number of added lines
                 - deletions (int): Total number of removed lines
     
+    Raises:
+        ParseError: If the diff text cannot be parsed
+        
     Example:
         >>> diff_text = subprocess.run(['git', 'diff'], capture_output=True).stdout
         >>> file_changes = parse_git_diff(diff_text)
         >>> summaries = extract_summary(file_changes)
     """
-    # Parse the unified diff format using unidiff library
-    # PatchSet handles hunk headers, line numbers, and context automatically
-    patch = PatchSet(diff_text.splitlines())
+    # Validate input
+    if not diff_text or not diff_text.strip():
+        raise ParseError(
+            "Empty diff text provided",
+            details={"input_length": len(diff_text) if diff_text else 0}
+        )
+    
+    try:
+        # Parse the unified diff format using unidiff library
+        # PatchSet handles hunk headers, line numbers, and context automatically
+        patch = PatchSet(diff_text.splitlines())
+    except Exception as e:
+        raise ParseError(
+            f"Failed to parse git diff: {str(e)}",
+            details={"error_type": type(e).__name__, "diff_length": len(diff_text)},
+            suggestion="Ensure the diff output is valid unified diff format."
+        )
+    
     files = []
 
     # Iterate through each file that has changes
@@ -162,5 +180,10 @@ def parse_git_diff(diff_text: str) -> List[Dict[str, Any]]:
         file_change["raw_diff"] = "\n".join(raw_diff_lines)
 
         files.append(file_change)
-    logger.info(f"file changes:{files}")
+    
+    # Log summary statistics instead of full file contents (security)
+    total_insertions = sum(f["meta"]["insertions"] for f in files)
+    total_deletions = sum(f["meta"]["deletions"] for f in files)
+    logger.info(f"Parsed {len(files)} file(s), {total_insertions} insertions, {total_deletions} deletions")
+    
     return files

@@ -9,15 +9,22 @@ import os
 import re
 import litellm
 from dotenv import load_dotenv
+from gitai.utils.exceptions import (
+    LLMError, APIAuthenticationError, NetworkError, 
+    RateLimitError, ConfigurationError
+)
+from gitai.utils.log import get_logger
 from .prompt import build_system_prompt, build_user_prompt
+
+logger = get_logger(__name__)
 
 # ============================================================
 # INITIALIZATION
 # Configure LLM settings and load environment variables
 # ============================================================
 
-# Enable verbose logging for debugging LLM API interactions
-litellm.set_verbose = True
+# Disable verbose logging to prevent sensitive data leakage
+# litellm.set_verbose = False  # Commented out - litellm defaults to False
 
 # Load API keys and configuration from .env file
 load_dotenv()
@@ -107,7 +114,14 @@ def get_llm_report(schema: dict, config: dict) -> dict:
 
     # Validate that required configuration is present
     if not model:
-        raise ValueError("LLM_MODEL not set in environment variables")
+        raise ConfigurationError(
+            "LLM_MODEL environment variable is not set",
+            details={"received_model": model},
+            suggestion="Set LLM_MODEL in your .env file. Example: LLM_MODEL=gemini/gemini-2.5-flash"
+        )
+    
+    if not api_key:
+        logger.warning("AI_KEY is not set. API calls may fail if the model requires authentication.")
 
     # Build the user prompt with schema data and user preferences
     # This creates a contextualized request for the LLM
@@ -128,9 +142,45 @@ def get_llm_report(schema: dict, config: dict) -> dict:
 
     # Execute the LLM API call with error handling
     try:
+        logger.debug(f"Calling LLM API with model: {model}")
         response = litellm.completion(**kwargs)
+    except litellm.AuthenticationError as e:
+        raise APIAuthenticationError(
+            "LLM API authentication failed",
+            details={"model": model, "error": str(e)},
+            suggestion="Verify your API key is correct and hasn't expired."
+        )
+    except litellm.RateLimitError as e:
+        raise RateLimitError(
+            "LLM API rate limit exceeded",
+            details={"model": model, "error": str(e)},
+            suggestion="Wait a moment before retrying, or consider upgrading your API plan."
+        )
+    except litellm.APIConnectionError as e:
+        raise NetworkError(
+            "Failed to connect to LLM API",
+            details={"model": model, "error": str(e)},
+            suggestion="Check your internet connection and try again."
+        )
+    except litellm.APIError as e:
+        raise LLMError(
+            f"LLM API returned an error: {str(e)}",
+            details={"model": model, "error_type": type(e).__name__},
+            suggestion="Check your API configuration and try again."
+        )
     except Exception as e:
-        raise RuntimeError(f"LLM API call failed: {str(e)}")
+        # Check if it's a network-related error
+        error_str = str(e).lower()
+        if any(keyword in error_str for keyword in ["connection", "network", "timeout", "socket"]):
+            raise NetworkError(
+                "Network error while calling LLM API",
+                details={"model": model, "error": str(e)},
+                suggestion="Check your internet connection."
+            )
+        raise LLMError(
+            f"Unexpected error calling LLM API: {str(e)}",
+            details={"model": model, "error_type": type(e).__name__}
+        )
 
     # Extract the text content from the response
     raw = response.choices[0].message.content.strip()

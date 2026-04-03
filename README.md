@@ -50,6 +50,8 @@ LLM_MODEL=gemini/gemini-2.5-flash # Or your preferred model like "openai/gpt-4o"
 *   `AI_KEY`: Your API key for the chosen LLM provider (e.g., Google Gemini, OpenAI).
 *   `LLM_MODEL`: The identifier for the LLM model you want to use. `litellm` supports many, so pick one that fits your needs. Examples include `gemini/gemini-1.5-flash`, `openai/gpt-3.5-turbo`, etc.
 
+> 💡 **Tip**: For detailed instructions on configuring different AI providers (Google Gemini, OpenAI, Anthropic, Groq, etc.), see the [AI Model Configuration Guide](docs/AI_MODEL_CONFIGURATION.md).
+
 You can also create a `config.json` file to customize GitAI's behavior:
 
 ```json
@@ -99,6 +101,16 @@ Using GitAI is pretty straightforward. Just make your changes, stage them, and l
 
 3.  **Automatic Committing**:
     If you've set `"auto_commit": true` in your `config.json`, GitAI will automatically commit with the generated message without asking for confirmation.
+
+## Logging & Error Handling
+
+GitAI includes comprehensive logging and error handling with a focus on security:
+
+- **Secure Logging**: All logs are automatically sanitized to prevent sensitive data (API keys, passwords, tokens) from being written to log files.
+- **Custom Exceptions**: Clear, actionable error messages with suggestions for resolution.
+- **Debug-Friendly**: Detailed logs are stored in the `logs/` directory for troubleshooting.
+
+For detailed information on configuring logging, understanding error types, and best practices, see the [Logging and Error Handling Guide](docs/LOGGING_AND_ERROR_HANDLING.md).
 
 ## Technologies Used
 

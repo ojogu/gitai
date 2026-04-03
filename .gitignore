@@ -11,7 +11,6 @@ wheels/
 
 #environment variables
 .env 
-config.json
 
 # Log files
 logs/
