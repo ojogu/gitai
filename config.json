@@ -4,5 +4,6 @@
   "include_body": true,
   "custom_instructions": "",
   "auto_commit": false,
-  "retry":3
+  "auto_push": true,
+  "retry": 3
 }

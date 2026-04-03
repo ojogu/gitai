@@ -165,6 +165,80 @@ def commit_changes(message: str) -> bool:
         return False
 
 
+def push_changes() -> bool:
+    """
+    Push committed changes to remote repository.
+    
+    Returns:
+        bool: True if push was successful
+    """
+    try:
+        # First, check if a remote is configured
+        result = subprocess.run(
+            ["git", "remote", "-v"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0 or not result.stdout.strip():
+            print("❌ No remote repository configured.")
+            print("💡 Add a remote with: git remote add origin <url>")
+            return False
+        
+        # Get current branch name
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0:
+            print("❌ Failed to determine current branch.")
+            return False
+        
+        branch = result.stdout.strip()
+        
+        # Attempt to push
+        print(f"🔄 Pushing to remote (branch: {branch})...")
+        result = subprocess.run(
+            ["git", "push", "origin", branch],
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        
+        if result.returncode != 0:
+            error_msg = result.stderr.strip()
+            print(f"❌ Push failed: {error_msg}")
+            
+            # Provide helpful suggestions based on error
+            if "couldn't find remote ref" in error_msg.lower() or "does not appear to be a git repository" in error_msg.lower():
+                print("💡 Make sure the remote repository exists and you have push access.")
+                print("💡 You may need to set the upstream: git push --set-upstream origin " + branch)
+            elif "authentication failed" in error_msg.lower() or "permission denied" in error_msg.lower():
+                print("💡 Authentication failed. Check your SSH keys or credentials.")
+            elif "connection timed out" in error_msg.lower() or "could not resolve host" in error_msg.lower():
+                print("💡 Network error. Check your internet connection and remote URL.")
+            
+            return False
+        
+        print("✅ Push successful!")
+        return True
+        
+    except subprocess.TimeoutExpired:
+        print("❌ Push timed out")
+        return False
+    except FileNotFoundError:
+        print("❌ Git is not installed or not in PATH")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error during push: {str(e)}")
+        print(f"❌ Unexpected error during push: {str(e)}")
+        return False
+
+
 def main() -> None:
     """Main entry point for the CLI."""
     print("🔍 Generating commit message...\n")
@@ -279,6 +353,9 @@ def main() -> None:
                 # Auto commit or ask for confirmation
                 if config.get("auto_commit"):
                     if commit_changes(message):
+                        # Auto push if enabled
+                        if config.get("auto_push"):
+                            push_changes()
                         return
                     # If auto-commit fails, fall through to manual confirmation
                     print("⚠️  Auto-commit failed, falling back to manual confirmation.")
@@ -286,6 +363,9 @@ def main() -> None:
                 # Ask user for confirmation
                 if confirm():
                     if commit_changes(message):
+                        # Auto push if enabled
+                        if config.get("auto_push"):
+                            push_changes()
                         return
                 
                 # User declined - ask if they want to try again
@@ -321,16 +401,18 @@ def main() -> None:
                     if choice == "0":
                         print("❌ Commit cancelled.")
                         return
-                    try:
-                        choice_num = int(choice)
-                        if 1 <= choice_num <= len(commit_messages):
-                            selected_message = commit_messages[choice_num - 1]
-                            if commit_changes(selected_message):
-                                return
-                        else:
-                            print(f"⚠️  Please enter a number between 0 and {len(commit_messages)}")
-                    except ValueError:
-                        print("⚠️  Please enter a valid number")
+                    choice_num = int(choice)
+                    if 1 <= choice_num <= len(commit_messages):
+                        selected_message = commit_messages[choice_num - 1]
+                        if commit_changes(selected_message):
+                            # Auto push if enabled
+                            if config.get("auto_push"):
+                                push_changes()
+                            return
+                    else:
+                        print(f"⚠️  Please enter a number between 0 and {len(commit_messages)}")
+                except ValueError:
+                    print("⚠️  Please enter a valid number")
                 except (EOFError, KeyboardInterrupt):
                     print("\n\n👋 Operation cancelled by user.")
                     return

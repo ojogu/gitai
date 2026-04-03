@@ -50,6 +50,19 @@ GitAIError (base)
 - **No Unnecessary Retries**: Successful commit messages are shown immediately and don't trigger automatic retries
 - **Multiple Attempts**: Users can choose from previously generated messages if they decline multiple attempts
 
+### 6. Verbose Logging Control
+
+- **VERBOSE_LOG Environment Variable**: Set to `false` to suppress all logs (only show commit message)
+- **Default**: `true` (show all logs)
+- **Use Case**: Set `VERBOSE_LOG=false` for cleaner output in CI/CD pipelines or scripts
+
+### 7. Auto Push Feature
+
+- **Configuration**: Set `auto_push: true` in `config.json`
+- **Behavior**: After successful commit, automatically pushes to remote repository
+- **Error Handling**: Provides helpful error messages for common push failures (no remote, authentication, network issues)
+- **Default**: `false` (commit only, no push)
+
 ## Usage Examples
 
 ### Using the SafeLogger

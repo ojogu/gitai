@@ -178,46 +178,45 @@ class SafeLogger:
         return getattr(self._logger, name)
 
 
-def setup_logger(name: str, file_path: str, level=logging.DEBUG, 
-                 enable_file_logging: bool = True,
+def setup_logger(name: str, file_path: str = None, level=logging.DEBUG, 
+                 enable_file_logging: bool = False,
                  enable_console_logging: bool = True) -> SafeLogger:
     """
     Sets up a logger with:
-    - Optional file logging (plain text, no color)
-    - Optional RichHandler for colored console output
+    - Optional console logging via RichHandler (file logging removed)
     - Automatic sanitization of sensitive data
+    - Respects VERBOSE_LOG environment variable
     Only sets up handlers once per logger.
 
     Args:
         name (str): Logger name (usually module name).
-        file_path (str): Log file name to store logs.
+        file_path (str): Deprecated, kept for backward compatibility.
         level (int): Logging level (e.g., logging.INFO).
-        enable_file_logging (bool): Whether to log to file.
+        enable_file_logging (bool): Deprecated, file logging is disabled.
         enable_console_logging (bool): Whether to log to console.
 
     Returns:
         SafeLogger: Configured logger instance with sanitization.
     """
+    import os as _os
+    # Check VERBOSE_LOG environment variable (default: true)
+    verbose_log = _os.getenv("VERBOSE_LOG", "true").lower()
+    is_verbose = verbose_log in ("true", "1", "yes", "y")
+    
     logger = logging.getLogger(name)
-    logger.setLevel(level)
+    
+    # If VERBOSE_LOG is false, set level to CRITICAL to suppress all logs
+    if not is_verbose:
+        logger.setLevel(logging.CRITICAL)
+    else:
+        logger.setLevel(level)
 
     # Avoid adding multiple handlers on repeated calls
     if not logger.handlers:
-        # Setup file handler (logs to logs/<file_path>)
-        if enable_file_logging:
-            os.makedirs(LOGS_DIR, exist_ok=True)
-            log_file_path = os.path.join(LOGS_DIR, file_path)
-            file_handler = logging.FileHandler(log_file_path)
-            file_handler.setLevel(level)
-            file_formatter = logging.Formatter(
-                '[%(asctime)s] [%(levelname)s] %(name)s - %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            file_handler.setFormatter(file_formatter)
-            logger.addHandler(file_handler)
-
+        # File logging is disabled - removed for cleaner output
+        
         # Setup rich console handler (colored, timestamped output)
-        if enable_console_logging:
+        if enable_console_logging and is_verbose:
             console_handler = RichHandler(
                 rich_tracebacks=True,     # Enable colorful tracebacks
                 show_time=True,           # Show time column
