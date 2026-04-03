@@ -2,7 +2,7 @@
 
 ## Overview
 
-The gitAI application now includes comprehensive logging and error handling to ensure a better developer experience while maintaining security by preventing sensitive information leakage.
+The gitAI application includes comprehensive logging and error handling to ensure a better developer experience while maintaining security by preventing sensitive information leakage. It also features a robust retry mechanism with proper user confirmation flow.
 
 ## Key Features
 
@@ -35,6 +35,20 @@ GitAIError (base)
 - User-friendly error messages with actionable suggestions
 - Detailed error context for debugging (logged, not shown to users)
 - Consistent error formatting across the application
+
+### 4. User Confirmation Flow
+
+- **Input Validation**: The `confirm()` function accepts both `y/yes` and `n/no` (case-insensitive)
+- **Re-prompting**: Invalid inputs trigger a re-prompt with clear guidance
+- **Graceful Cancellation**: Keyboard interrupts (Ctrl+C) are handled gracefully
+
+### 5. Retry Mechanism
+
+- **Smart Retries**: The system only retries when:
+  - The LLM API call fails (network errors, rate limits, etc.)
+  - The user explicitly declines a generated commit message and requests a new one
+- **No Unnecessary Retries**: Successful commit messages are shown immediately and don't trigger automatic retries
+- **Multiple Attempts**: Users can choose from previously generated messages if they decline multiple attempts
 
 ## Usage Examples
 

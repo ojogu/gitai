@@ -80,22 +80,34 @@ def get_staged_diff() -> str:
         )
 
 
-def confirm(prompt: str = "Proceed? (y/n): ") -> bool:
+def confirm(prompt: str = "👉 Use this commit message? (y/n): ") -> bool:
     """
-    Ask user for confirmation.
+    Ask user for confirmation with proper input validation.
     
     Args:
         prompt: The prompt to display
         
     Returns:
-        bool: True if user confirms, False otherwise
+        bool: True if user confirms (y/yes), False if user declines (n/no)
     """
-    try:
-        response = input(prompt).lower().strip()
-        return response == "y" or response == "yes"
-    except (EOFError, KeyboardInterrupt):
-        print("\n\n👋 Operation cancelled by user.")
-        return False
+    while True:
+        try:
+            response = input(prompt).lower().strip()
+            
+            # Accept y/yes for confirmation
+            if response in ("y", "yes"):
+                return True
+            
+            # Accept n/no for rejection
+            if response in ("n", "no"):
+                return False
+            
+            # Invalid input - re-prompt with guidance
+            print("⚠️  Invalid input. Please enter 'y' or 'yes' to confirm, or 'n' or 'no' to decline.")
+            
+        except (EOFError, KeyboardInterrupt):
+            print("\n\n👋 Operation cancelled by user.")
+            return False
 
 
 def handle_gitai_error(error: GitAIError) -> None:
@@ -216,91 +228,87 @@ def main() -> None:
             print("❌ Failed to build change schema.")
             return
         
-        # Get LLM report
+        # Get LLM report with proper retry and confirmation flow
         result: Optional[dict] = None
         message: Optional[str] = None
-        
-        max_retries = config.get("retry", 3)
         commit_messages = []
+        max_retries = config.get("retry", 3)
         
         for attempt in range(max_retries):
             try:
-                if attempt == 0:
-                    # First attempt - need to generate initial message
-                    try:
-                        result = get_llm_report(schema, config)
-                    except LLMError as e:
-                        handle_gitai_error(e)
-                        return
-                    except Exception as e:
-                        logger.error(f"LLM call failed (attempt {attempt + 1}): {str(e)}")
-                        if attempt < max_retries - 1:
-                            print(f"⚠️ LLM call failed, will retry...")
-                            continue
-                        else:
-                            print("❌ Failed to generate commit message after all retries.")
-                            return
-                    
-                    message = result.get("message", "").strip()
-                else:
-                    # Retry
+                # Show retry indicator only for actual retries (attempt > 0)
+                if attempt > 0:
                     print(f"\n🔄 Retry {attempt}/{max_retries - 1}")
-                    try:
-                        result = get_llm_report(schema, config)
-                    except LLMError as e:
-                        handle_gitai_error(e)
+                
+                # Call LLM API
+                try:
+                    result = get_llm_report(schema, config)
+                except LLMError as e:
+                    # Custom exception - handle with our error handler
+                    handle_gitai_error(e)
+                    # If it's a rate limit or network error, we might want to retry
+                    if attempt < max_retries - 1:
+                        print(f"⚠️  Will retry...")
+                        continue
+                    else:
                         return
-                    except Exception as e:
-                        logger.error(f"LLM call failed (attempt {attempt + 1}): {str(e)}")
-                        if attempt < max_retries - 1:
-                            print(f"⚠️ LLM call failed, will retry...")
-                            continue
-                        else:
-                            print("❌ Failed to generate commit message after all retries.")
-                            return
-                    
-                    message = result.get("message", "").strip()
+                except Exception as e:
+                    logger.error(f"LLM call failed (attempt {attempt + 1}): {str(e)}")
+                    if attempt < max_retries - 1:
+                        print(f"⚠️  LLM call failed, will retry...")
+                        continue
+                    else:
+                        print("❌ Failed to generate commit message after all retries.")
+                        return
+                
+                # Extract and validate message
+                message = result.get("message", "").strip()
                 
                 if not message:
-                    print("⚠️ Generated empty message, will retry...")
+                    print("⚠️  Generated empty message, will retry...")
                     continue
                 
+                # Store successful message
                 commit_messages.append(message)
                 
-                if attempt > 0:
-                    print("✨ Suggested Commit Message:\n")
-                    print(message)
-                    print("\n" + "-" * 50)
+                # Show the generated message to user
+                print("\n✨ Suggested Commit Message:\n")
+                print(message)
+                print("\n" + "-" * 50)
                 
+                # Auto commit or ask for confirmation
+                if config.get("auto_commit"):
+                    if commit_changes(message):
+                        return
+                    # If auto-commit fails, fall through to manual confirmation
+                    print("⚠️  Auto-commit failed, falling back to manual confirmation.")
+                
+                # Ask user for confirmation
+                if confirm():
+                    if commit_changes(message):
+                        return
+                
+                # User declined - ask if they want to try again
+                if attempt < max_retries - 1:
+                    print("\n💡 You can retry to generate a different commit message.")
+                    if not confirm("👉 Generate a new commit message? (y/n): "):
+                        # User doesn't want to retry
+                        break
+                else:
+                    # No more retries available
+                    print("\n❌ Maximum retries reached.")
+                    break
+                    
             except Exception as e:
                 logger.error(f"Unexpected error during LLM call (attempt {attempt + 1}): {str(e)}")
                 if attempt < max_retries - 1:
-                    print(f"⚠️ Unexpected error, will retry...")
+                    print(f"⚠️  Unexpected error, will retry...")
                     continue
                 else:
                     print("❌ Failed to generate commit message after all retries.")
                     return
         
-        if not commit_messages:
-            print("❌ Failed to generate any commit message.")
-            return
-        
-        # Use the last generated message for confirmation
-        message = commit_messages[-1]
-        
-        # Auto commit or confirm
-        if config.get("auto_commit"):
-            if commit_changes(message):
-                return
-            # If auto-commit fails, fall through to manual confirmation
-            print("⚠️ Auto-commit failed, falling back to manual confirmation.")
-        
-        # Ask user for confirmation
-        if confirm("👉 Use this commit message? (y/n): "):
-            if commit_changes(message):
-                return
-        
-        # If user declined and we have multiple messages, let them choose
+        # If we have commit messages but user declined all, offer to choose from previous attempts
         if len(commit_messages) > 1:
             print("\n📋 Available commit messages from all attempts:")
             for i, msg in enumerate(commit_messages, 1):
@@ -313,20 +321,25 @@ def main() -> None:
                     if choice == "0":
                         print("❌ Commit cancelled.")
                         return
-                    choice_num = int(choice)
-                    if 1 <= choice_num <= len(commit_messages):
-                        selected_message = commit_messages[choice_num - 1]
-                        if commit_changes(selected_message):
-                            return
-                    else:
-                        print(f"⚠️ Please enter a number between 0 and {len(commit_messages)}")
-                except ValueError:
-                    print("⚠️ Please enter a valid number")
+                    try:
+                        choice_num = int(choice)
+                        if 1 <= choice_num <= len(commit_messages):
+                            selected_message = commit_messages[choice_num - 1]
+                            if commit_changes(selected_message):
+                                return
+                        else:
+                            print(f"⚠️  Please enter a number between 0 and {len(commit_messages)}")
+                    except ValueError:
+                        print("⚠️  Please enter a valid number")
                 except (EOFError, KeyboardInterrupt):
                     print("\n\n👋 Operation cancelled by user.")
                     return
+        elif len(commit_messages) == 1:
+            # Only one message was generated and user declined
+            print("❌ Commit cancelled.")
         else:
-            print("❌ Maximum retries reached. Commit cancelled.")
+            # No messages were generated
+            print("❌ Failed to generate any commit message.")
             
     except KeyboardInterrupt:
         print("\n\n👋 Operation cancelled by user.")
