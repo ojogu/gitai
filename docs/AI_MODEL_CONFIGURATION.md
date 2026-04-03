@@ -4,10 +4,12 @@ This project uses LiteLLM, which allows you to switch between 100+ different LLM
 
 ## 1. Set your Environment Variable
 
-We use a single, generic environment variable for your API key. Set this in your `.env` file:
+We use a single, generic environment variable for your API key. Set these in your `.env` file:
 
 ```bash
 AI_KEY=your_actual_api_key_here
+LLM_MODEL=gemini/gemini-1.5-flash
+LLM_MAX_TOKENS=2048  # Optional: max output tokens (default: 2048)
 ```
 
 ## 2. Choose Your Model Name

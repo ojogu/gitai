@@ -25,32 +25,27 @@ def build_system_prompt():
     Returns:
         str: The complete system prompt text to be sent with every LLM request
     """
-    return """You are an expert software engineer and Architect of commit messages.
-
-You write clear, concise, and meaningful Git commit messages based on structured code changes.
+    return """You are an expert software engineer writing clear, concise Git commit messages.
 
 You will receive:
-- A list of changed files, each with a semantic summary, structured signals, and the raw unified diff (hunks)
+- Changed files with semantic summaries, structured signals, and raw unified diff
 - Aggregate metadata (files changed, insertions, deletions)
-- Heuristic hints (suggested type, scope, breaking change signal, and confidence)
+- Heuristic hints (suggested type, scope, breaking change signal, confidence)
 
 **Critical: The Raw Diff is your source of truth.**
-- Hints are weak signals derived from keyword matching — treat them as suggestions, not ground truth.
-- The structured signals (type, entity, impact) provide location context but may have false positives.
-- Confidence: If confidence is "low," the suggested type is a guess — analyze the diff logic to determine the true intent.
-- Validation: You MUST validate every hint against the raw diff. If a hint suggests 'feat' but the diff shows a bug fix, use 'fix'.
+- Hints are weak signals — treat as suggestions, not ground truth.
+- If confidence is "low," analyze the diff to determine true intent.
+- Validate hints against the diff: if hint suggests 'feat' but diff shows bug fix, use 'fix'.
 
-Your focus:
-- Identify the "Why": Why did the developer make these changes?
-- Summarize intent: Focus on the high-level semantic change, not a line-by-line description.
-- Contextual Awareness: Use the surrounding code context in the diff hunks to understand the scope of the change.
+Focus:
+- Identify the "Why" — why were these changes made?
+- Summarize intent, not line-by-line description.
+- Use surrounding code context to understand scope.
 
 Output rules:
 - Use present tense.
 - Be specific and direct.
-- Do not explain the commit message or provide meta-commentary.
-- Output ONLY the commit message.
-"""
+- Output ONLY the commit message."""
 
 
 # ============================================================
@@ -140,35 +135,36 @@ def build_user_prompt(schema: dict, config: dict) -> str:
     # Build format-specific instructions based on style preference
     if config.get("style") == "conventional":
         max_title = config.get("max_title_length", 72)
-        base_prompt = f"""Generate a Conventional Commit message from the structured data below.
+        base_prompt = f"""Generate a Conventional Commit message.
 
 Rules:
 - Format: <type>(<scope>): <short description>
-- Title length: Maximum {max_title} characters.
-- Intent: Do not describe the code; explain the change in behavior or state.
-- Conventional Types: feat, fix, refactor, test, docs, chore, style, ci, perf.
+- Title: Maximum {max_title} characters.
+- Intent: Explain the change in behavior, not the code.
+- Types: feat, fix, refactor, test, docs, chore, style, ci, perf.
 """
 
         if config.get("include_body", True):
             base_prompt += """
-Body Rules:
-- Include 1-3 bullet points for non-trivial changes.
-- Explain the "Why" and any specific side effects or dependencies changed.
+Body (concise):
+- 2-3 bullet points maximum for non-trivial changes.
+- Each bullet: one sentence, max 15 words.
+- Explain "Why" and side effects.
 """
 
         base_prompt += """
 Breaking Changes:
-- If and only if you confirm a breaking change from the diff, append '!' to the type.
+- If confirmed from diff, append '!' to type.
 - Example: feat!(auth): remove legacy login endpoint
 """
 
     else:
-        base_prompt = """Generate a clear and concise git commit message.
+        base_prompt = """Generate a clear, concise git commit message.
 
 Rules:
-- Focus on the primary intent of the developer.
-- Avoid implementation details (e.g., do not say "Added an if statement").
-- Keep the title punchy and informative.
+- Focus on primary intent.
+- Avoid implementation details.
+- Keep title punchy and informative.
 """
 
     # Gather dynamic context notes and custom instructions

@@ -66,6 +66,56 @@ def _extract_json(text: str) -> dict:
     return json.loads(text)
 
 
+def _is_truncated(text: str) -> bool:
+    """
+    Detect if the LLM response appears to be truncated.
+    
+    Checks for common signs of truncation:
+    - Text ends with incomplete sentence (no punctuation)
+    - Text ends with incomplete JSON (missing closing braces/brackets)
+    - Text ends with ellipsis or cut-off words
+    
+    Args:
+        text (str): The text to check for truncation
+        
+    Returns:
+        bool: True if the text appears to be truncated
+    """
+    if not text or len(text) < 10:
+        return False
+    
+    text = text.strip()
+    
+    # Check if text ends with incomplete JSON
+    # Count opening and closing braces/brackets
+    open_braces = text.count('{')
+    close_braces = text.count('}')
+    open_brackets = text.count('[')
+    close_brackets = text.count(']')
+    
+    if open_braces > close_braces or open_brackets > close_brackets:
+        return True
+    
+    # Check if text ends without proper punctuation (for non-JSON responses)
+    if not text.endswith(('.', '!', '?', '"', "'", '`', '\n')):
+        # Additional check: if it ends mid-word (no space before end)
+        if len(text) > 20 and not text[-20:].endswith(('."', '."', '."', '```')):
+            return True
+    
+    # Check for common truncation patterns
+    truncation_patterns = [
+        r'\.\.\.+$',  # Ends with ellipsis
+        r'—$',  # Ends with em dash
+        r'[a-zA-Z]$',  # Ends with a letter (likely mid-word)
+    ]
+    
+    for pattern in truncation_patterns:
+        if re.search(pattern, text):
+            return True
+    
+    return False
+
+
 # ============================================================
 # MAIN LLM FUNCTION
 # Generates commit messages by calling LLM APIs
@@ -111,6 +161,9 @@ def get_llm_report(schema: dict, config: dict) -> dict:
     # Get LLM configuration from environment variables
     model = os.getenv("LLM_MODEL")
     api_key = os.getenv("AI_KEY")
+    
+    # Get max_tokens from environment variable or use default (2048 for better output space)
+    max_tokens = int(os.getenv("LLM_MAX_TOKENS", 2048))
 
     # Validate that required configuration is present
     if not model:
@@ -137,7 +190,7 @@ def get_llm_report(schema: dict, config: dict) -> dict:
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.2,  # Low temperature for more deterministic output
-        "max_tokens": 1024,  # Allow enough tokens for full commit messages with body
+        "max_tokens": max_tokens,  # Configurable output token limit
     }
 
     # Execute the LLM API call with error handling
@@ -184,6 +237,12 @@ def get_llm_report(schema: dict, config: dict) -> dict:
 
     # Extract the text content from the response
     raw = response.choices[0].message.content.strip()
+    
+    # Check for truncation and log warning if detected
+    if _is_truncated(raw):
+        logger.warning(f"LLM response appears to be truncated (length: {len(raw)} chars). "
+                      f"This may result in an incomplete commit message. "
+                      f"Consider increasing LLM_MAX_TOKENS or reducing input size.")
 
     # Attempt to parse as JSON for structured output
     # Falls back to treating as plain text if parsing fails
@@ -194,7 +253,8 @@ def get_llm_report(schema: dict, config: dict) -> dict:
         # This handles cases where LLM returns unformatted text
         result = {
             "message": raw,
-            "raw": raw
+            "raw": raw,
+            "truncated": _is_truncated(raw)  # Flag if response was truncated
         }
 
     return result
