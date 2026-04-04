@@ -82,31 +82,74 @@ which gitai
 
 This will show you exactly where the isolated executable lives (usually `~/.local/bin/gitai`).
 
-### Environment Variables
+### Configuration
 
-Before you can run GitAI, you'll need to set up your AI provider API key and chosen LLM model. Create a `.env` file in the root of your project (where `pyproject.toml` is) with the following variables:
+GitAI supports multiple configuration methods with the following precedence:
 
-```example
-AI_KEY=your_api_key_here
-LLM_MODEL=gemini/gemini-2.5-flash # Or your preferred model like "openai/gpt-4o"
+1. **Environment Variables** (highest priority)
+2. **Global Configuration** (`~/.config/gitai/config.json`)
+3. **Project Configuration** (`config.json` in project root)
+4. **Default Values** (lowest priority)
+
+#### Quick Setup with `gitai init`
+
+The easiest way to configure GitAI is to run the interactive setup:
+
+```bash
+gitai init
 ```
 
-*   `AI_KEY`: Your API key for the chosen LLM provider (e.g., Google Gemini, OpenAI).
-*   `LLM_MODEL`: The identifier for the LLM model you want to use. `litellm` supports many, so pick one that fits your needs. Examples include `gemini/gemini-1.5-flash`, `openai/gpt-3.5-turbo`, etc.
+This will guide you through:
+- Setting your API key
+- Choosing a model (with presets for popular options)
+- Selecting commit message style
 
-> 💡 **Tip**: For detailed instructions on configuring different AI providers (Google Gemini, OpenAI, Anthropic, Groq, etc.), see the [AI Model Configuration Guide](docs/AI_MODEL_CONFIGURATION.md).
+Your configuration will be saved globally in `~/.config/gitai/config.json`.
 
-You can also create a `config.json` file to customize GitAI's behavior:
+#### Manual Configuration
+
+**Environment Variables** (for project-specific or temporary overrides):
+
+Create a `.env` file in your project root:
+
+```bash
+# API key for your LLM provider
+AI_KEY=your_api_key_here
+
+# LLM model to use
+LLM_MODEL=gemini/gemini-2.5-flash
+```
+
+**Global Configuration** (for system-wide settings):
+
+Run `gitai init` or manually create `~/.config/gitai/config.json`:
 
 ```json
 {
+  "api_key": "your_api_key_here",
+  "model": "gemini/gemini-2.5-flash",
   "style": "conventional",
   "max_title_length": 72,
   "include_body": true,
-  "custom_instructions": "",
   "auto_commit": false,
-  "retry":3
+  "retry": 3
 }
+```
+
+> 💡 **Tip**: For detailed instructions on configuring different AI providers (Google Gemini, OpenAI, Anthropic, Groq, etc.), see the [AI Model Configuration Guide](docs/AI_MODEL_CONFIGURATION.md).
+
+#### Viewing and Updating Configuration
+
+View your current configuration:
+```bash
+gitai config
+```
+
+Update a specific setting:
+```bash
+gitai config model=gemini/gemini-1.5-pro
+gitai config style=simple
+gitai config auto_commit=true
 ```
 
 ## Usage

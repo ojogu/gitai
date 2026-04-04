@@ -9,6 +9,12 @@ from gitai.core.extractor import extract_summary
 from gitai.core.schema_builder import build_schema
 from gitai.core.llm import get_llm_report
 from gitai.utils.config import load_config
+from gitai.utils.global_config import (
+    init_config_interactive, 
+    show_config, 
+    update_config,
+    get_effective_config
+)
 from gitai.utils.log import setup_logger, sanitize_for_logging
 from gitai.utils.exceptions import (
     GitAIError, GitError, ConfigurationError, 
@@ -16,6 +22,11 @@ from gitai.utils.exceptions import (
     APIAuthenticationError, RateLimitError
 )
 
+from rich.console import Console
+from rich.panel import Panel
+from rich import box
+
+console = Console()
 logger = setup_logger(__name__, "cli.log")
 
 
