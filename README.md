@@ -23,20 +23,64 @@ Let's get you set up to use GitAI.
 
 ### Installation
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/yourusername/gitai.git # Replace with your repo URL
-    cd gitai
-    ```
+To use GitAI globally without interfering with your system's Python packages, use one of the following methods:
 
-2.  **Ensure Python 3.10**:
-    This project requires Python 3.10 or newer. You can check your Python version with `python --version`.
+#### Option 1: Using uv (Recommended - Fastest)
+`uv` is an extremely fast Python package manager that handles tool isolation automatically.
 
-3.  **Install Dependencies**:
-    GitAI is designed as a Python package. Install it in editable mode:
-    ```bash
-    pip install -e .
-    ```
+```bash
+# Install GitAI as a global tool
+uv tool install ojogu-gitai
+
+# It is now available globally
+gitai --help
+```
+
+#### Option 2: Using pipx (Standard for CLI Tools)
+`pipx` installs the package into an isolated environment and automatically adds the executable to your `$PATH`.
+
+```bash
+# Install pipx if you haven't already
+sudo apt install pipx && pipx ensurepath
+
+# Install GitAI
+pipx install ojogu-gitai
+```
+
+#### Option 3: Using pip (Legacy/Global)
+If you are on an older system or inside a container where PEP 668 isn't enforced, you can use standard pip. Note: On modern Linux, this may require the `--break-system-packages` flag.
+
+```bash
+pip install ojogu-gitai
+```
+
+#### Option 4: Install from Source (For Development)
+If you want to contribute or modify the source code:
+
+```bash
+git clone https://github.com/ojogu/gitai.git
+cd gitai
+pip install -e .
+```
+
+**Requirements**: Python 3.10 or newer is required.
+
+### Why Use uv or pipx?
+
+By recommending `uv` or `pipx`, you're solving two problems for your users:
+
+- **No Manual Activation**: The user doesn't need to run `source venv/bin/activate`. The tool just works like `ls` or `git`.
+- **No Dependency Hell**: If GitAI requires pydantic v2 but their project uses pydantic v1, there won't be a conflict because GitAI's dependencies are hidden away in its own private folder.
+
+### Verifying Installation
+
+After installation, you can verify GitAI is working by running:
+
+```bash
+which gitai
+```
+
+This will show you exactly where the isolated executable lives (usually `~/.local/bin/gitai`).
 
 ### Environment Variables
 
@@ -134,8 +178,8 @@ We'd love for you to contribute to GitAI! If you have ideas for new features, fi
 
 ## Author Info
 
-*   **LinkedIn**: [Your LinkedIn Profile](https://www.linkedin.com/in/yourusername)
-*   **X (formerly Twitter)**: [@YourTwitterHandle](https://x.com/YourTwitterHandle)
+*   **LinkedIn**: [Precious Ojogu](https://www.linkedin.com/in/precious-ojogu/)
+*   **X (formerly Twitter)**: [@_Ojogu](https://x.com/_Ojogu)
 
 ---
 

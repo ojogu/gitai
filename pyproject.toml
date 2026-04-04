@@ -1,5 +1,5 @@
 [project]
-name = "gitai"
+name = "ojogu-gitai" # what people type for pip install
 version = "0.1.0"
 description = "AI automatic commit message"
 readme = "README.md"
@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 # 1. Define the command name and where the function is
-[project.scripts]
+[project.scripts] # what they type to run the tool
 gitai = "gitai.main:main"
 
 # 2. Tell the build system where your code lives
