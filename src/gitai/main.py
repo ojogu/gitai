@@ -67,32 +67,35 @@ def main_entry():
     """Main entry point that handles subcommands."""
     args = sys.argv[1:]
     
-    if not args or args[0] in ("help", "--help", "-h"):
+    # Handle help flags
+    if args and args[0] in ("help", "--help", "-h"):
         print_help()
         return
     
-    command = args[0].lower()
-    
-    if command == "init":
+    # Handle subcommands
+    if args and args[0] == "init":
         handle_init()
-    elif command == "config":
+        return
+    elif args and args[0] == "config":
         handle_config(args[1:])
-    else:
-        # Check if first-time user (no valid config) - auto-run init
-        if is_first_time_user():
-            console.print()
-            console.print(Panel(
-                "[yellow]⚠ Welcome to GitAI![/yellow]\n\n"
-                "It looks like this is your first time. Let's set up your configuration.\n\n"
-                "[dim]You can also run 'gitai init' manually at any time.[/dim]",
-                box=box.ROUNDED,
-                border_style="yellow"
-            ))
-            console.print()
-            init_config_interactive()
-        
-        # Run the main commit generation
-        main()
+        return
+    
+    # No subcommand - run the main commit generation
+    # Check if first-time user (no valid config) - auto-run init
+    if is_first_time_user():
+        console.print()
+        console.print(Panel(
+            "[yellow]⚠ Welcome to GitAI![/yellow]\n\n"
+            "It looks like this is your first time. Let's set up your configuration.\n\n"
+            "[dim]You can also run 'gitai init' manually at any time.[/dim]",
+            box=box.ROUNDED,
+            border_style="yellow"
+        ))
+        console.print()
+        init_config_interactive()
+    
+    # Run the main commit generation
+    main()
 
 
 if __name__ == "__main__":
