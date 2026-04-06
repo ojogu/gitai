@@ -27,7 +27,7 @@ DEFAULT_API_KEY_URL = "https://gist.githubusercontent.com/ojogu/0cf0d416b778d3bc
 # Default configuration values
 DEFAULT_CONFIG = {
     "api_key": "",
-    "model": "gemini/gemini-2.5-flash",
+    "model": "groq/llama-3.3-70b-versatile",
     "style": "conventional",
     "max_title_length": 72,
     "include_body": True,
@@ -339,48 +339,51 @@ def init_config_interactive() -> Dict[str, Any]:
     
     config["api_key"] = api_key
     
-    # Track if we're using the default Gemini key
+    # Track if we're using the default Groq key from Gist
     using_default_key = not current_key and api_key
     
     # Model selection with arrow keys
     console.print()
     model_options = [
+        "groq/llama-3.3-70b-versatile (default)",
+        "groq/qwen/qwen3-32b (default fallback)",
         "gemini/gemini-2.5-flash (fast, recommended)",
-        "gemini/gemini-1.5-pro (more capable)",
         "openai/gpt-4o",
         "Custom (enter manually)"
     ]
     default_model_idx = 0
     current_model = config.get("model", "")
-    if current_model == "gemini/gemini-1.5-pro":
+    if current_model == "groq/qwen/qwen3-32b":
         default_model_idx = 1
-    elif current_model == "openai/gpt-4o":
+    elif current_model == "gemini/gemini-2.5-flash":
         default_model_idx = 2
-    elif current_model and not current_model.startswith("gemini/") and not current_model.startswith("openai/"):
+    elif current_model == "openai/gpt-4o":
         default_model_idx = 3
+    elif current_model and not current_model.startswith("groq/") and not current_model.startswith("gemini/") and not current_model.startswith("openai/"):
+        default_model_idx = 4
     
     console.print("[dim]Choose your preferred model:[/dim]")
     model_idx = select_from_list(model_options, default=default_model_idx)
     
-    if model_idx == 3:  # Custom
+    if model_idx == 4:  # Custom
         custom_model = Prompt.ask("Enter custom model", default=current_model)
         config["model"] = custom_model
     else:
         config["model"] = model_options[model_idx].split(" (")[0]
     
-    # Model compatibility check when using default Gemini key
+    # Model compatibility check when using default Groq key
     if using_default_key:
         selected_model = config["model"]
-        # Check if the selected model is Gemini-compatible
-        if not selected_model.startswith("gemini/"):
+        # Check if the selected model is Groq-compatible
+        if not selected_model.startswith("groq/"):
             console.print()
-            console.print("[yellow]⚠ The default API key is for Google Gemini models only.[/yellow]")
+            console.print("[yellow]⚠ The default API key is for Groq models only.[/yellow]")
             console.print("[yellow]  Your selected model is not compatible with this key.[/yellow]")
             console.print()
             
             # Offer options using arrow key selection
             compatibility_options = [
-                f"Switch to gemini/gemini-2.5-flash (recommended)",
+                f"Switch to groq/llama-3.3-70b-versatile (recommended)",
                 f"Keep {selected_model} and provide a different API key"
             ]
             
@@ -392,9 +395,9 @@ def init_config_interactive() -> Dict[str, Any]:
             )
             
             if choice_idx == 0:
-                # Switch to Gemini model
-                config["model"] = "gemini/gemini-2.5-flash"
-                console.print(f"[green]✓ Model switched to gemini/gemini-2.5-flash[/green]")
+                # Switch to Groq model
+                config["model"] = "groq/llama-3.3-70b-versatile"
+                console.print(f"[green]✓ Model switched to groq/llama-3.3-70b-versatile[/green]")
             else:
                 # User wants to keep their model and provide a different API key
                 console.print()
@@ -407,9 +410,9 @@ def init_config_interactive() -> Dict[str, Any]:
                     config["api_key"] = new_api_key
                     console.print(f"[green]✓ API key updated[/green]")
                 else:
-                    console.print("[yellow]⚠ No API key provided. Using default Gemini key.[/yellow]")
-                    config["model"] = "gemini/gemini-2.5-flash"
-                    console.print(f"[green]✓ Model switched to gemini/gemini-2.5-flash[/green]")
+                    console.print("[yellow]⚠ No API key provided. Using default Groq key.[/yellow]")
+                    config["model"] = "groq/llama-3.3-70b-versatile"
+                    console.print(f"[green]✓ Model switched to groq/llama-3.3-70b-versatile[/green]")
     
     # Commit style with arrow keys
     console.print()

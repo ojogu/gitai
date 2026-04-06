@@ -188,7 +188,7 @@ def get_llm_report(schema: dict, config: dict) -> dict:
         raise ConfigurationError(
             "LLM_MODEL environment variable is not set",
             details={"received_model": model},
-            suggestion="Set LLM_MODEL in your .env file. Example: LLM_MODEL=gemini/gemini-2.5-flash"
+            suggestion="Set LLM_MODEL in your .env file. Example: LLM_MODEL=groq/llama-3.3-70b-versatile"
         )
     
     if not api_key:
