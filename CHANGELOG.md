@@ -16,16 +16,21 @@ All notable changes to this project will be documented in this file.
   - Arrow key navigation for list selections (▶ indicator)
   - Yes/No toggle with arrow keys for boolean options
   - Basic settings (API key, model, style) - required
-  - Advanced settings (max_title_length, include_body, auto_commit, auto_push, retry, custom_instructions) - optional
+  - Advanced settings (max_title_length, include_body, auto_commit, auto_push, retry, llm_max_tokens, verbose_log, custom_instructions) - optional
 - **Auto-Init on First Run**: When no configuration exists, `gitai` automatically prompts for setup
-- **Configuration Precedence**: Environment variables > Global config > Default values
+- **Configuration Precedence**: Environment variables > Global config > Remote default (GitHub Gist) > Default values
+- **Remote Default API Key**: Fetch default API key from maintainer's GitHub Gist for out-of-box functionality
 - **API Key Masking**: Sensitive API keys are masked in configuration output (e.g., `AIza••••••••chyg`)
+- **New Configuration Options**:
+  - `llm_max_tokens` - Maximum output tokens for commit messages (default: 2048)
+  - `verbose_log` - Enable verbose logging (default: false)
 
 ### Changed
 - **Entry Point**: Updated from `gitai.cli.cli:main` to `gitai.main:main_entry` for command handling
 - **Documentation**: Updated README.md with comprehensive installation methods (uv, pipx, pip, source)
 - **Author Info**: Updated with real social media links (LinkedIn, X)
 - **Default Values**: All boolean options default to `false` except `include_body` (default: `true`)
+- **Environment Variable**: Renamed `AI_KEY` to `API_KEY` for consistency
 
 ### Fixed
 - **.env Parsing**: Removed inline comments that were causing environment variable parsing issues
@@ -34,10 +39,14 @@ All notable changes to this project will be documented in this file.
 
 ### Technical Changes
 - Added `src/gitai/utils/global_config.py` module for global configuration management
+- Added `fetch_default_api_key()` function to fetch remote default API key from GitHub Gist
 - Added `select_from_list()` function for arrow key navigation in lists
 - Added `ask_yes_no()` function for Yes/No toggle with arrow keys
+- Added `mask_api_key()` function for secure API key display
+- Added `clear_screen()` function for terminal screen clearing
 - Updated `src/gitai/core/llm.py` to fall back to global config when env vars are not set
 - Updated `pyproject.toml` entry point to use new command handler
+- Updated `.env.example` with new environment variables
 
 ---
 

@@ -255,9 +255,19 @@ def main() -> None:
     print("🔍 Generating commit message...\n")
     
     try:
-        # Load configuration
+        # Load configuration - merge global and project configs
         try:
-            config = load_config()
+            # Get global config (includes API key, model, auto_push, verbose_log, etc.)
+            global_config = get_effective_config()
+            
+            # Get project-specific config (style, max_title_length, etc.)
+            project_config = load_config()
+            
+            # Merge them, with project config taking precedence for overlapping keys
+            config = {**global_config, **project_config}
+            
+            logger.debug(f"Merged config: {sanitize_for_logging(config)}")
+            
         except ConfigurationError as e:
             handle_gitai_error(e)
             return

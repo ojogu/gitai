@@ -185,7 +185,7 @@ def setup_logger(name: str, file_path: str = None, level=logging.DEBUG,
     Sets up a logger with:
     - Optional console logging via RichHandler (file logging removed)
     - Automatic sanitization of sensitive data
-    - Respects VERBOSE_LOG environment variable
+    - Respects VERBOSE_LOG environment variable, then config file setting
     Only sets up handlers once per logger.
 
     Args:
@@ -199,13 +199,31 @@ def setup_logger(name: str, file_path: str = None, level=logging.DEBUG,
         SafeLogger: Configured logger instance with sanitization.
     """
     import os as _os
-    # Check VERBOSE_LOG environment variable (default: true)
-    verbose_log = _os.getenv("VERBOSE_LOG", "true").lower()
-    is_verbose = verbose_log in ("true", "1", "yes", "y")
+    
+    # Order of precedence: 
+    # 1. VERBOSE_LOG environment variable
+    # 2. verbose_log setting in global config file (~/.config/gitai/config.json)
+    # 3. Default: false
+    
+    env_verbose = _os.getenv("VERBOSE_LOG")
+    
+    if env_verbose is not None:
+        # Environment variable takes precedence
+        is_verbose = env_verbose.lower() in ("true", "1", "yes", "y")
+    else:
+        # Try to use get_effective_config() for consistency with other config reading
+        try:
+            from gitai.utils.global_config import get_effective_config
+            config = get_effective_config()
+            config_verbose = config.get("verbose_log", False)
+            is_verbose = config_verbose if isinstance(config_verbose, bool) else str(config_verbose).lower() in ("true", "1", "yes", "y")
+        except (ImportError, Exception):
+            # Fallback if import fails
+            is_verbose = False
     
     logger = logging.getLogger(name)
     
-    # If VERBOSE_LOG is false, set level to CRITICAL to suppress all logs
+    # If verbose is false, set level to CRITICAL to suppress all logs
     if not is_verbose:
         logger.setLevel(logging.CRITICAL)
     else:
